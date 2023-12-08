@@ -3,15 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DemoApiProject.DbContext;
 
-public class TodoDbContext : Microsoft.EntityFrameworkCore.DbContext
+public class TodoDbContext(DbContextOptions<TodoDbContext> options) : Microsoft.EntityFrameworkCore.DbContext(options)
 {
     public DbSet<Todo> Todos { get; protected set; } = null!;
     public DbSet<TodoHistory> TodoHistories { get; protected set; } = null!;
-
-    public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
-    {
-
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,11 +14,13 @@ public class TodoDbContext : Microsoft.EntityFrameworkCore.DbContext
         {
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Description).HasMaxLength(100);
         });
         modelBuilder.Entity<TodoHistory>(b =>
         {
             b.HasKey(x => x.Id);
             b.Property(x => x.Id).ValueGeneratedOnAdd();
+            b.Property(x => x.Action).HasMaxLength(10);
         });
     }
 }

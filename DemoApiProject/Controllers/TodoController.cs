@@ -7,35 +7,26 @@ namespace DemoApiProject.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class TodoController : ControllerBase
+    public class TodoController(TodoDbContext dbContext, FireForget fireForget) : ControllerBase
     {
-        private readonly TodoDbContext _dbContext;
-        private readonly FireForget _fireForget;
-
-        public TodoController(TodoDbContext dbContext, FireForget fireForget)
-        {
-            _dbContext = dbContext;
-            _fireForget = fireForget;
-        }
-
         [HttpPost]
-        public async Task<ActionResult<Todo>> Create(Todo request)
+        public async Task<ActionResult<Todo>> Create([FromBody] string description )
         {
             var todo = new Todo
             {
-                Description = request.Description
+                Description = description
             };
 
-            await _dbContext.AddAsync(todo);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.AddAsync(todo);
+            await dbContext.SaveChangesAsync();
 
             // insert TodoHistory in background
-            _fireForget.Execute<TodoDbContext>(async ctx =>
+            fireForget.Execute<TodoDbContext>(async ctx =>
             {
+                Console.WriteLine("begin background task");
                 var history = new TodoHistory
                 {
                     TodoId = todo.Id,
-                    Todo = todo,
                     Date = DateTime.Now,
                     Action = "Created"
                 };
@@ -43,8 +34,9 @@ namespace DemoApiProject.Controllers
                 await ctx.AddAsync(history);
                 await ctx.SaveChangesAsync();
 
-                // dispose the TodoContext
-                await ctx.DisposeAsync();
+                Console.WriteLine("end background task");
+                //// dispose the TodoContext
+                //await ctx.DisposeAsync();
             });
 
             return Ok(todo);
@@ -53,7 +45,7 @@ namespace DemoApiProject.Controllers
         [HttpGet("histories")]
         public async Task<ActionResult> ViewAllHistories()
         {
-            var result = await _dbContext.TodoHistories.AsNoTracking().ToListAsync();
+            var result = await dbContext.TodoHistories.AsNoTracking().ToListAsync();
             return Ok(result);
         }
     }

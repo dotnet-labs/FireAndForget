@@ -1,21 +1,14 @@
 ﻿namespace DemoApiProject;
 
-public sealed class FireForget
+public sealed class FireForget(IServiceProvider serviceProvider)
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public FireForget(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public void Execute<TService>(Func<TService, Task> func) where TService : notnull
     {
         Task.Run(async () =>
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = serviceProvider.CreateScope();
                 var svc = scope.ServiceProvider.GetRequiredService<TService>();
                 await func(svc);
             }

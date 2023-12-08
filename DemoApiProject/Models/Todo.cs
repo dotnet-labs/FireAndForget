@@ -10,7 +10,6 @@ public class Todo
 public class TodoHistory
 {
     public int Id { get; set; }
-    public Todo Todo { get; set; } = new ();
     public int TodoId { get; set; }
     public DateTime Date { get; set; }
     public string Action { get; set; } = string.Empty;
